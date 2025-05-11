@@ -14,7 +14,7 @@ Welcome to my portfolio of university projects. This repository contains various
 
 **Tools:** Python, Pandas, Machine Learning, Data Visualization
 
-### 3. [Data Modelling in Space and Time](https://github.com/JoshH7042/university-projects/blob/main/Exploring%20Spotify%20Data%20and%20Musical%20Attributes%20on%20Song%20Success/FINAL%20PROJECT%20PDF.pdf)
+### 3. [Data Modelling in Space and Time](https://github.com/JoshH7042/university-projects/blob/main/Data%20Modelling%20in%20Space%20and%20Time/Data-Science-and-Statistical-Modelling-in-Space-and-Time---Coursework.pdf)
 *A statistical modelling project exploring spatial, temporal, and spatio-temporal patterns in environmental datasets using R. Includes Gaussian process modelling, time series forecasting, and Bayesian inference applied to oceanic and climatic data.*  
 
 **Tools:** R, Geospatial Data, Temporal Modelling, Spatial Statistics
