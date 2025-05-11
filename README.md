@@ -34,7 +34,7 @@ Welcome to my portfolio of university projects. This repository contains various
 
 **Tools:** R studio, Linear modelling, Machine Learning, Data Visualization
 
-### 7. [Exploring Big Data - Ethical Reflections and Frameworks in the Age of Datafication]
+### 7. [Exploring Big Data - Ethical Reflections and Frameworks in the Age of Datafication](https://github.com/JoshH7042/university-projects/blob/main/Exploring%20Big%20Data%20-%20Ethical%20Reflections%20and%20Frameworks%20in%20the%20Age%20of%20Datafication/Final%20Report%20-%20PDF.pdf)
 This project explores the ethical dimensions of Big Data and data governance through a personal reflection and a critical case study analysis of the 2016 Uber data breach. It applies consequentialism and virtue ethics to evaluate corporate decision-making and the broader implications for digital trust and accountability
 
 **Tools:** Literature Review, Critical Analysis, Ethical Frameworks
