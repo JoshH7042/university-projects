@@ -7,11 +7,11 @@ Welcome to my portfolio of university projects. This repository contains various
 Here are the major projects I've worked on:
 
 ### 1. [Advanced Topics In Statistics Inference and Classification](./Advanced-Topics-In-Statistics-Inference-and-Classification)
-*Description coming soon*  
+*A detailed exploration of statistical inference and classification methods.*  
 **Tools:** R, Statsmodels, Classification Algorithms, Cross-validation
 
 ### 2. [Exploring Spotify Data and Musical Attributes on Song Success](https://github.com/JoshH7042/university-projects/blob/main/Exploring%20Spotify%20Data%20and%20Musical%20Attributes%20on%20Song%20Success/FINAL%20PROJECT%20PDF.pdf)
-*Description coming soon*  
+*Predicting song success based on musical features from Spotify data.* 
 **Tools:** Python, Pandas, Machine Learning, Data Visualization
 
 ### 3. [Data Modelling in Space and Time](./Data-Modelling-in-Space-and-Time)
