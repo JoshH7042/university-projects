@@ -25,8 +25,8 @@ Welcome to my portfolio of university projects. This repository contains various
 
 **Tools:** Python, Pandas, Machine Learning, Data Visualization
 
-### 5. [Statistical Modelling of TB Risk Across Brazil](./Statistical-Modelling-of-TB-Risk-Across-Brazil)
-*Description coming soon*  
+### 5. [Statistical Modelling of TB Risk Across Brazil](https://github.com/JoshH7042/university-projects/blob/main/Statistical%20Modelling%20of%20TB%20Risk%20Across%20Brazil/Statistical_Modelling_Project.pdf)
+*This project involved modelling tuberculosis (TB) incidence across Brazil's 557 microregions using Generalised Additive Models (GAMs) in R. I conducted extensive exploratory data analysis (EDA), handled spatial and temporal data, implemented and compared Poisson and Negative Binomial GAMs to address overdispersion, and visualised non-linear effects of socio-economic predictors on TB risk. Skills demonstrated include spatial data analysis, statistical modelling, model diagnostics, geospatial visualisation, and interpretation of complex model outputs to guide public health resource allocation.*  
 
 **Tools:** R, Spatial Statistics, Generalized Linear Models (GLM), TB Data
 
