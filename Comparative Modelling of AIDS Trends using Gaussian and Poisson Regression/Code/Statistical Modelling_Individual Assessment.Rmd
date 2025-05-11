@@ -1,0 +1,942 @@
+---
+title: "MTHM506 - Statistical Data Modelling"
+author: "Joshua Harrison"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    css: style.css
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r nlmodel, include=FALSE}
+load("C:/Users/joshh/OneDrive - University of Exeter/MSc Applied Data Science and Statistics/MTHM506 - Statistical Data Modelling/Coursework 1/datasets.RData")
+library(ggplot2)
+library(rmarkdown)
+library(tidyverse)
+library(lmerTest)
+library(zoo)
+library(MASS)
+library(knitr)
+library(patchwork)
+library(lmtest)
+library(AER)
+```
+
+AI-supported/AI-integrated use is permitted in this assessment. I acknowledge the following uses of GenAI tools in this assessment:
+
+- I have used GenAI tools to proofread and correct grammar or spelling errors
+- I have used GenAI to help cross-check coding/plotting
+
+I declare that I have referenced use of GenAI outputs within my assessment in line with the University referencing guidelines.
+
+# **Question 1: Non-Linear Model Estimation**
+
+The dataframe `nlmodel` contains data on a response variable \( y \) and a single explanatory variable \( x \). A scatter plot of \( y \) versus \( x \) suggests a strong non-linear relationship: 
+
+```{r, fig.width=4.5, fig.height=3.5, fig.align='center', echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+cat("\n\n")
+ggplot(nlmodel, aes(x = x, y = y)) +
+  geom_point(color = "black", size = 1.5, alpha = 0.6) +  
+  labs(title = "Scatter Plot of y vs x", x = "x", y = "y") +
+  theme_classic(base_size = 12) +  
+   theme(
+    plot.title = element_text(size = 10, hjust = 0.5, face = "bold"),  
+    axis.title = element_text(size = 12),  
+    axis.text = element_text(size = 10)
+   )
+cat("\n\n")
+```
+Suppose for these data we wish to consider the model:
+
+\[
+Y_i \sim N \left( \frac{\theta_1 x_i}{\theta_2 + x_i}, \sigma^2 \right)
+\]
+
+\[
+i = 1, 2, \dots, 100, \quad Y_i \text{ independent}
+\]
+
+
+**(a) Why this model can't be fit using a linear regression model** 
+
+The model shown above specifies that the mean response is:
+
+\[ \mu(x) = \frac{\theta_1 x_i}{\theta_2 + x_i} \]
+
+This expression is not linear with respect to the parameters \( \theta_1 \) and \( \theta_2 \). A linear regression model assumes that the relationship between the response variable and predictor is of the form:
+
+\[ Y = \beta_0 + \beta_1 x + \epsilon \]
+
+This is where \(\beta_0\) and \(\beta_1\) are both unknown parameters with \(\epsilon\) representing the random error. However, in our model, \( \theta_1 \) is in the numerator with \( \theta_2 \) being in the denominator, creating fractional non-linearity. The mean response function of the model is non-linear in parameters and cannot be written as a linear combination of \( \theta_1 \) and \( \theta_2 \). Therefore, due to the non-linear relationship between the response and parameters, a linear model is not feasible.
+
+
+**(b) Writing down the likelihood \( L(\theta_1, \theta_2, \sigma^2; y, x) \) and the log-likelihood \( \ell(\theta_1, \theta_2, \sigma^2; y, x) \):**
+
+The likelihood function is given by: 
+
+$$
+L(\theta_1, \theta_2, \sigma^2; y, x) = \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi\sigma^2}} \exp \left( -\frac{(y_i - \frac{\theta_1 x_i}{\theta_2 + x_i})^2}{2\sigma^2} \right)
+$$
+
+The log-likelihood function \( \ell(\theta_1, \theta_2, \sigma^2; y, x) \) is the natural logarithm of the likelihood function shown above. Therefore simplifying it we get: 
+
+$$
+\ell(\theta_1, \theta_2, \sigma^2; y, x) = -\frac{n}{2} \log(2\pi\sigma^2) - \frac{1}{2\sigma^2} \sum_{i=1}^{n} (y_i - \frac{\theta_1 x_i}{\theta_2 + x_i})^2
+$$
+
+**(c) Defining the Negative Log-Likelihood Function**
+
+The goal for Maximum Likelihood Estimation is to maximise the likelihood function, but most numerical optimisation functions such as nlm() in R are designed to minimise a function. Therefore, we take the negative log-likelihood, so that minimising the negative log likelihood is equivalent to maximising the likelihood.  
+
+```{r}
+# Define the negative log-likelihood function 
+
+mylike <- function(params, y, x) {
+  theta1 <- params[1]
+  theta2 <- params[2]
+  sigma <- abs(params[3])
+  
+# Number of Observations
+  
+  n <- length(y)
+  
+# Mean function
+  
+  mu <- (theta1 * x) / (theta2 + x)
+  
+# Computing log-likelihood
+
+  logL <- - (n /2) * log(2 * pi * sigma^2) - sum((y - mu)^2) / (2 * sigma^2)
+  
+# Return negative log-likelihood
+  
+  return(-logL)
+  
+}
+```
+
+**(d) Finding Maximum Likelihood Estimates (MLE)** 
+
+Before estimating the parameters, we need to provide **sensible starting values** for the optimisation algorithm. This is particularly important because functions such as `nlm()` are sensistive to intial conditions and can converge to local optima. 
+
+```{r}
+
+x <- nlmodel$x
+y <- nlmodel$y
+
+# Choosing starting values:
+
+theta1_start <- (max(y) - min(y)) / (max(x) - min(x))
+
+theta2_start <- median(x)
+
+sigma_start <- sd(y)
+
+#Combining into a vector 
+
+start_values <- c(theta1_start, theta2_start, sigma_start)
+
+```
+
+For \( \theta_1 \): I have chosen to use the range of \(y\) divided by the range of \(x\). This is because it provides an estimate to the rate of change in \(y\) with respect to \(x\). 
+
+For \( \theta_2 \): I have chosen to use the median of \(x\) instead of the mean, in order to avoid extreme values in the denominator.
+
+For \(\sigma\): I have chosen to use the standard deviation of \(y\) as an estimate for the error variance.
+
+After I chose my start values, I combined them into a vector because the `nlm()` function requires the parameters to be passed as a single numeric vector and it ensures compatibility with the `mylike()` function. 
+
+```{r}
+# Minimising the negative log-likelihood using nlm()
+
+fit <- nlm(mylike, p = start_values, y = y, x = x, hessian=TRUE)
+```
+
+```{r results='asis', echo=FALSE, warning=FALSE}
+# Extract MLE estimates
+
+theta1_hat <- fit$estimate[1]
+theta2_hat <- fit$estimate[2]
+sigma_hat <- abs(fit$estimate[3]) 
+
+cat("## Maximum Likelihood Estimates (MLEs):\n\n")
+cat("**Theta1:**", theta1_hat, "\n\n")
+cat("**Theta2:**", theta2_hat, "\n\n")
+cat("**Sigma:**", sigma_hat, "\n\n")
+```
+
+```{r, echo=TRUE, warning=FALSE}
+
+# Plotting data and fitted mean function
+
+fitted_mu <- (theta1_hat * x) / (theta2_hat + x)
+```
+
+```{r fig.width=5, fig.height=3.2, fig.align='center', echo=FALSE, warning=FALSE, message=FALSE}
+ggplot() +
+  geom_point(aes(x, y), color = "black", size = 1.5, alpha = 0.6) +  # Scatter plot of data
+  geom_line(aes(x, fitted_mu), color = "red", size = 1) +  # Fitted mean function
+  labs(title = "Scatter Plot of y vs x with Fitted Mean Function",
+       x = "x", y = "y") +
+  theme_classic(base_size = 12) +  
+   theme(
+    plot.title = element_text(size = 10, hjust = 0.5, face = "bold"),  
+    axis.title = element_text(size = 12),  
+    axis.text = element_text(size = 10)
+   )
+```
+
+The scatter plot shown above suggests a saturation effect, where increases in x lead to diminishing increases in y. The fitted mean function shown by the red line follows the general shape of the data, capturing the asymptotic trend. 
+
+**(e) Computing standard errors and Confidence Intervals.**
+
+
+```{r echo=TRUE, warning=FALSE, results='asis'}
+
+# Computing Hessian and variance-covariance matrix
+
+hessian_matrix <- fit$hessian
+OIM <- solve(hessian_matrix) # Observed Information Matrix
+
+# Extracting standard errors (square roots of diagonal elements)
+
+se_theta1 <- sqrt(OIM[1, 1])
+se_theta2 <- sqrt(OIM[2, 2])
+se_sigma <- sqrt(OIM[3, 3])
+```
+
+The Hessian Matrix is the matrix of the second-order partial derivatives of the log-likelihood function, providing information about the curvature of the likelihood function. The Observed Information Matrix (OIM) is the inverse of the Hessian matrix and gives the estimated variance-covariance matrix of the parameter estimates. The diagonal elements of the OIM represent the variances of the parameter estimates. Standard errors can be calculated by taking the square roots of these diagonal elements as shown. The standard errors measure the uncertainty of the estimated parameters. 
+
+Standard Errors for \( \theta_1 \) and \( \theta_2 \):
+
+```{r echo=FALSE, warning=FALSE, results='asis'}
+
+# Create a data frame for a well-formatted table
+se_table <- data.frame(
+  Parameter = c("Theta1", "Theta2", "Sigma"),
+  `Standard Error` = c(se_theta1, se_theta2, se_sigma)
+)
+
+# Display table using knitr::kable() for better readability
+knitr::kable(se_table, 
+             digits = 6)  # Format numbers to 6 decimal places
+```
+
+```{r, echo=TRUE, warning=FALSE, results='asis'}
+# Computing at a 95% confidence interval 
+
+ci_theta1 <- c(theta1_hat - 1.96 * se_theta1, theta1_hat + 1.96 * se_theta1)
+ci_theta2 <- c(theta2_hat - 1.96 * se_theta2, theta2_hat + 1.96 * se_theta2)
+```
+
+```{r, echo=FALSE, warning=FALSE, results='asis'}
+# Creating a data frame for displaying results
+results_df <- data.frame(
+  Parameter = c("Theta1", "Theta2"),
+  `Std. Error` = c(sprintf("%.3f", se_theta1), sprintf("%.6f", se_theta2)),
+  `95% CI Lower` = c(sprintf("%.3f", ci_theta1[1]), sprintf("%.6f", ci_theta2[1])),
+  `95% CI Upper` = c(sprintf("%.3f", ci_theta1[2]), sprintf("%.6f", ci_theta2[2]))
+)
+
+# Display results in a nice table format
+knitr::kable(results_df, caption = "Standard Errors and 95% Confidence Intervals")
+```
+The standard errors represent the variability of the parameter estimates. A smaller standard error suggests a more precise estimate. Theta1 has a standard error of 2.675 implying it has some variation, but its confidence interval is wide shown by the 95% CI of (209.407, 219.893). Theta2 has a much smaller standard error of 0.00514 which is very small, indicating a precise estimate for Theta2. Theta2 has a narrow confidence interval between 0.053459 and 0.073609, indicating that this parameter is well-estimated.  
+
+
+**(f) Hypothesis Testing**
+
+### Defining Hypotheses
+
+We are testing whether \( \theta_2 \) = 0.08 at the 5% significance level:
+
+- **Null Hypothesis (\( H_0 \))**:
+  
+  \[
+  \theta_2 = 0.08
+  \]
+  
+- **Alternative Hypothesis (\(H_A \))**:
+
+  \[
+  \theta_2 \neq 0.08
+  \]
+  This is a **two tailed test**.
+  
+### Computing the Test Statistic 
+
+The test statistic follows a *standard nomral distribution*:
+
+\[
+Z = \frac{\hat{\theta}_2 - 0.08}{SE(\hat{\theta}_2)}
+\]
+
+where:
+
+- \( \hat{\theta}_2 \) is the **MLE estimate of \( \theta_2 \)**,
+- \( SE(\hat{\theta}_2) \) is the **standard error of \( \theta_2 \)**.
+
+We calculate this statistic using our estimated values.
+
+```{r, echo=TRUE, warning=FALSE, results='asis'}
+
+
+theta2_0 <- 0.08 #H0: theta2 = 0.08
+
+# Computing z-test statistic 
+
+Z_score <- (theta2_hat - theta2_0) / se_theta2
+Z_score
+
+# Computing two-tailed p-value
+
+p_value <- 2 * (1 - pnorm(abs(Z_score))) 
+p_value
+```
+
+Therefore the p-value is less than 0.05, so we reject \( H_0 \) and accept (\(H_A \)), concluding that \( \theta_2 \) is significantly different from 0.08. 
+
+**(g) Constructing 95% Prediction Intervals**
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+
+predicted_y <- (theta1_hat * x) / (theta2_hat + x)
+
+# Compute 95% prediction interval bounds
+
+lower_bound <- predicted_y - 1.96 * sigma_hat
+upper_bound <- predicted_y + 1.96 * sigma_hat
+```
+
+```{r, fig.width=5, fig.height=3.2, fig.align='center', echo=FALSE, warning=FALSE, message=FALSE}
+# dataframe for plotting
+
+prediction_df <- data.frame(
+  
+  x = x, 
+  y = y, 
+  predicted_y = predicted_y,
+  lower = lower_bound,
+  upper = upper_bound
+)
+
+# Plot data, predicted values, and confidence interval 
+library(ggplot2)
+
+ggplot(prediction_df, aes(x, y)) +
+  geom_point(color = "black", size = 1.5, alpha = 0.6) +
+  geom_line(aes(y = predicted_y), color = "red", linewidth = 1) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "gray", alpha = 0.3) +
+  labs(title = "Plug-in Prediction with 95% Prediction Interval",
+       x = 'x', y = "y") +
+    theme_classic(base_size = 12) +  
+   theme(
+    plot.title = element_text(size = 10, hjust = 0.5, face = "bold"),  
+    axis.title = element_text(size = 12),  
+    axis.text = element_text(size = 10)
+   )
+```
+
+The shaded area in the graph above represents the 95% prediction interval, meaning that future observations are expected to fall within this range 95% of the time. The prediction interval captures most data points, meaning that the model has reasonable predictive accuracy. Some data points fall outside the prediction interval suggesting possible heteroskedasticity where the variance is not constant. 
+
+
+# **Question 2: Analysing Quartely AIDS Cases in the UK**
+
+The dataframe `aids` relates to the number of quarterly AIDS cases in the UK, \( y_i \), from January 1983 to March 1994. The variable `cases` is \( y_i \), and `date` is time, symbolised here as \( x_i \). In this question we consider two competing models to describe the trend in the number of cases. 
+
+Model 1 follows a Poisson distribution: 
+
+\[
+Y_i \sim \text{Pois}(\lambda_i)
+\]
+
+\[
+\log(\lambda_i) = \beta_0 + \beta_1 x_i
+\]
+
+Model 2 follows a Normal distribution: 
+
+
+\[
+Y_i \sim N(\mu_i, \sigma^2)
+\]
+
+\[
+\log(\mu_i) = \gamma_0 + \gamma_1 x_i
+\]
+
+**(a) Exploratory Data Analysis (EDA)**
+
+Before fitting models to describe the trend in the number of AIDS cases, we will understand the relationship, structure and trends within the data. First, the dates are converted to date format to facilitate plotting. We have calculated a mean number of cases, which can provide as a reference point for the trend. Using ggplot, we have then created a scatter plot below displaying AIDS cases over time with a LOESS (Locally Estimated Scatterplot Smoothing) curve to capture trends in the data.     
+
+```{r, include=TRUE}
+
+aids$date <- as.Date(as.yearqtr(aids$date, format="%YQ%q"))
+
+year_corrected <- year(aids$date) + 1900
+
+aids$date <- make_date(year_corrected, month(aids$date), day(aids$date))
+
+mean_cases <- mean(aids$cases, na.rm = TRUE)
+```
+
+```{r, fig.width=5, fig.height=3.2, fig.align='center', echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(aids, aes(x = date, y = cases)) +
+  geom_point(size = 1.5, alpha = 0.6) +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +  
+  labs(title = "Quarterly AIDS Cases in the UK",
+       x = "Year",
+       y = "Number of Cases") +
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y") +  # Fix x-axis labels
+  theme_classic(base_size = 12) +  
+  theme(
+    plot.title = element_text(size = 10, hjust = 0.5, face = "bold"),  
+    axis.title = element_text(size = 12),  
+    axis.text = element_text(size = 10)
+  )
+```
+
+As shown by the scatter plot above which maps \( y_i \) (number of cases) against \( x_i \) (time), we can see that the mean number of cases is increasing exponentially over time. This supports a log-linear relationship displayed by the red trend line. 
+
+The Poisson distribution model (Model 1) may be a suitable choice since it assumes the mean number of cases follows this exponential trend. From the graph, the observed variance increases as the mean increases. However, the Poisson model may not be the best pick due to over dispersion where the observed variance in the data is significantly greater than the mean. This violates the Poisson distribution assumption that the mean and variance should be equal, suggesting that a Negative Binomial model could be more appropriate. 
+
+The Normal distribution model (Model 2) could also work given the data is following an exponential-like trend, therefore a log-transformed Normal model could be suitable. However, this depends on if the data is symmetrically distributed after transformation. If the transformed data remains skewed then the Normal model may not be the best fit.  
+
+**(b) Model Fitting and Comparison**
+
+We will now fit both models using Poisson regression and Gaussian regression with a log-link. 
+
+Fitting Model 1: \[
+\log(\lambda_i) = \beta_0 + \beta_1 x_i
+\] 
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+#Fitting the Poisson Model
+model_1 <- glm(cases ~ date, data = aids, family = poisson(link = "log"))
+```
+
+Fitting Model 2: \[
+\log(\mu_i) = \gamma_0 + \gamma_1 x_i
+\]
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+#Fitting the Normal Model 
+model_2 <- glm(cases ~ date, data = aids, family = gaussian(link = "log"))
+```
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+# Compute Predictions and Confidence Intervals for Model 1 (Poisson)
+poisson_pred <- predict(model_1, type = "link", se.fit = TRUE)  
+aids$poisson_fit <- exp(poisson_pred$fit)  
+aids$poisson_lwr <- exp(poisson_pred$fit - 1.96 * poisson_pred$se.fit)  # Lower CI
+aids$poisson_upr <- exp(poisson_pred$fit + 1.96 * poisson_pred$se.fit)  # Upper CI
+
+
+# Compute Predictions and Confidence Intervals for Model 2 (Normal)
+normal_pred <- predict(model_2, interval = "confidence", se.fit = TRUE) 
+aids$normal_fit <- exp(normal_pred$fit)  
+aids$normal_lwr <- exp(normal_pred$fit - 1.96 * normal_pred$se.fit)  # Lower CI
+aids$normal_upr <- exp(normal_pred$fit + 1.96 * normal_pred$se.fit)  # Upper CI
+```
+
+```{r, fig.width=8, fig.height=3.5, fig.align='center', echo=FALSE, warning=FALSE, message=FALSE}
+poisson_model <- ggplot(aids, aes(x = date, y = cases)) +
+  geom_point(size = 1.5, alpha = 0.6) +  
+  geom_line(aes(y = poisson_fit), color = "blue", size = 1) +  
+  geom_ribbon(aes(ymin = poisson_lwr, ymax = poisson_upr), fill = "blue", alpha = 0.2) + 
+  labs(title = "Poisson Model Fit with 95% Confidence Interval",
+       x = "Time (Year)",
+       y = "Number of Cases") +
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+  theme_classic(base_size = 12) +  
+  theme(
+    plot.title = element_text(size = 10, hjust = 0.5, face = "bold"),  
+    axis.title = element_text(size = 12),  
+    axis.text = element_text(size = 10)
+  )
+
+normal_model <- ggplot(aids, aes(x = date, y = cases)) +
+  geom_point(size = 1.5, alpha = 0.6) +  
+  geom_line(aes(y = normal_fit), color = "red", size = 1) +  
+  geom_ribbon(aes(ymin = normal_lwr, ymax = normal_upr), fill = "red", alpha = 0.2) + 
+  labs(title = "Normal Model Fit with 95% Confidence Interval",
+       x = "Time (Year)",
+       y = "Number of Cases") +
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+  theme_classic(base_size = 12) +  
+  theme(
+    plot.title = element_text(size = 10, hjust = 0.5, face = "bold"),  
+    axis.title = element_text(size = 12),  
+    axis.text = element_text(size = 10)
+  )
+
+(poisson_model + normal_model) + plot_layout(guides = "collect", widths = c(1, 1.2))
+```
+### Validity of the Poisson Model (Model 1)
+
+The poisson model assumes the number of cases follows a Poisson distribution, making it suitable for count data. The Poisson Model captures the overall increasing trend of the data well. The log-linear assumption is reasonable. However, there is potential over dispersion with variance in the data appearing larger than the model assumes. There are many underestimates between 1987 to 1992, with some points being consistently above the predicted mean. The confidence intervals also widen significantly over time, which suggests that there is increasing uncertainty in predictions.
+
+### Validity of the Normal Model (Model 2)   
+
+The Normal Model curve captures the general trend of the data reasonably well, much alike the Poisson Model. The confidence intervals are much wider in this model but are more stable, helping predict more values between 1987 to 1992 compared to the Poisson Model. The log-transformation has linearised the relationship well. However, the assumption of normally distributed residuals may not hold. The model is not able to account for discrete nature of case counts like the Poisson Model can. The widening confidence intervals towards later years shows there is greater prediction uncertainty which is expected as case counts grow. 
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+
+aic_results <- data.frame(
+  Model = c("Poisson Model (Model 1)", "Normal Model (Model 2)"),
+  AIC_Value = c(AIC(model_1), AIC(model_2))
+)
+
+kable(aic_results, caption = "AIC Comparison Models")
+
+```
+AIC (Akaike Information Criterion) is a measure used to compare models by assessing their relative quality. Models with lower AIC's are preferred because they explain the data well with fewer parameters. Looking at the AIC values above, the Normal Model (Model 2) has a much lower AIC value of 482.82 compared to the Poisson Model (Model 1) of 1154.09. This implies that the Normal Model (Model 2) fits the data better and is preferable compared to the Poisson Model (Model 1). 
+
+**(c) Model Diagnostics - Deviance Residuals**
+
+In order to assess the models, the deviance residuals are plotted against the fitted values. These can be used to check whether the residuals exhibit any particular patterns or deviance from 0 that suggest a poor model fit. 
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+
+# Computing residuals and fitted values for Poisson model
+aids$poisson_resid <- residuals(model_1, type = "deviance")
+aids$poisson_fitted <- fitted(model_1)
+
+# Computing residuals and fitted values for Normal model
+aids$normal_resid <- residuals(model_2, type = "deviance")
+aids$normal_fitted <- fitted(model_2)
+```
+
+```{r, fig.width=8, fig.height=3.5, fig.align='center', echo=FALSE, warning=FALSE, message=FALSE}
+
+plot_poisson_resid <- ggplot(aids, aes(x = poisson_fitted, y = poisson_resid)) +
+  geom_point(size = 1.5, alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +
+  labs(title = "Residuals vs Fitted Values (Model 1)",
+       x = expression("Fitted Values (" ~ hat(lambda)[i] ~ ")"), 
+       y = "Deviance Residuals") +
+  theme_classic(base_size = 12) +  
+  theme(
+    plot.title = element_text(size = 10, hjust = 0.5, face = "bold"),  
+    axis.title = element_text(size = 12),  
+    axis.text = element_text(size = 10)
+  )
+
+plot_normal_resid <- ggplot(aids, aes(x = normal_fitted, y = normal_resid)) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +  # Red trend curve
+  labs(title = "Residuals vs Fitted Values (Model 2)",
+       x = expression("Fitted Values (" ~ hat(mu)[i] ~ ")"),
+       y = "Deviance Residuals") +
+  theme_classic(base_size = 12) +  
+  theme(
+    plot.title = element_text(size = 10, hjust = 0.5, face = "bold"),  
+    axis.title = element_text(size = 12),  
+    axis.text = element_text(size = 10)
+  )
+
+(plot_poisson_resid + plot_normal_resid) + plot_layout(guides = "collect", widths = c(1, 1.2))
+```
+
+### Poisson Model (Model 1) Residuals vs Fitted Values 
+
+The Poisson Model (Model 1) has a LOESS curve that is curved rather than flat around 0. The residuals are showing a trend rather than being randomly scattered. The residuals increase and then decrease which suggests non-linearity that the Poisson model does not capture. The spread of the residuals increases with more fitted values, indicating that there is possible overdispersion with the variance being greater than the mean. 
+
+In order to address the non-linearity, we could add higher-order terms such as quadratic or cubic terms to allow for a better fit for non-linear trends. This would make the residuals become more randomly scattered. A negative binomial model may be better suited to address the overdispersion shown from the Poisson model (Model 1) because they allow variance to be greater than the mean. 
+
+
+
+### Normal Model (Model 2) Residuals vs Fitted Values
+
+
+The Normal Model (Model 2) has a similar curved trend to the Poisson Model. The deviance residuals scale is much larger, particularly for larger fitted values. The range is shown to be much wider than the Poisson Model ranging from -50 to 100, suggesting heteroscedasticity. This means that residual variance is increasing with fitted values. The normality assumption may not hold well for this model. 
+
+To potentially improve the fit of the model, We could also add a quadratic term to allow for a better fit for non-linear trends much like with the poisson model. If the LOESS curve in the deviance residual graph flattens around 0 more so than the deviance residual graph shown above, then adding the quadratic term would have improved the model fit.     
+
+**(d) Hypothesis Testing for Model Extensions**
+
+### Defining Hypotheses
+
+We perform hypothesis tests to determine whether adding a quadratic term (\( date^2 \)) significantly improves each model.
+
+### Poisson Model:
+- **Null Hypothesis (\( H_0 \))**: The relationship is strictly linear, meaning the quadratic term does not improve the model (\( \beta_2 = 0 \)).
+- **Alternative Hypothesis (\( H_A \))**: The quadratic term significantly improves the model (\( \beta_2 \neq 0 \)).
+
+### Normal Model:
+- **Null Hypothesis (\( H_0 \))**: The relationship is strictly linear, meaning the quadratic term does not improve the model (\( \beta_2 = 0 \)).
+- **Alternative Hypothesis (\( H_A \))**: The quadratic term significantly improves the model (\( \beta_2 \neq 0 \)).
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+aids$numeric_date <- as.numeric(aids$date)  
+
+# Fit Poisson model with quadratic term
+model_poisson_quad <- glm(cases ~ numeric_date + I(numeric_date^2), data = aids, family = poisson(link = "log"))
+
+# Fit Normal model with quadratic term
+model_normal_quad <- glm(cases ~ numeric_date + I(numeric_date^2), data = aids, family = gaussian(link = "log"))
+```
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# Likelihood Ratio Test for Poisson Model
+poisson_lrt <- lrtest(model_1, model_poisson_quad)
+poisson_lrt
+
+```
+Having fit the new Poisson Model with a quadratic term, the likelihood ratio test performed on the new model above compares the Simpler Model (model 1/poisson Model) with the Extended Model (model_poisson_quad). The new term added is the date^2 term. As shown above, the p-value is 2.2e-16, which is highly significant. Since p<0.05, we reject the null hypothesis and accept the alternate hypothesis: that the quadratic term significantly improves the model. 
+
+
+
+```{r, echo=TRUE}
+# ANOVA Test for Normal Model
+normal_anova <- anova(model_2, model_normal_quad)
+normal_anova
+```
+After fitting the extended normal model (model_normal_quad) with a quadratic term, the anova test performed above compares the simpler normal model (model_2) with the extended normal model. As shown above, the residual deviance for the simpler model was 105323 and the extended model's residual deviance is 46331, suggesting that the quadratic model explains more variation in the data. The F-statistic is high with a value of 53.478, showing that the model has an improved fit for the data. The p-value is 5.205e-09 which is much smaller than 0.05, so we reject the null hypothesis and accept the alternate hypothesis, concluding that the quadratic term significantly improves the model.
+
+```{r, echo=TRUE}
+# Compare AIC for all models
+AIC(model_1, model_poisson_quad, model_2, model_normal_quad)
+```
+By adding the quadratic term to both models, the AIC values decrease showing better model fit and explanation of the data. The poisson model's AIC value was significantly decreased by over half, while the normal model's AIC value only dropped partially after the addition of the quadratic term. 
+
+
+### Deviance Residuals for Extended Models 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+aids$poisson_quad_resid <- residuals(model_poisson_quad, type = "deviance")
+aids$poisson_quad_fitted <- fitted(model_poisson_quad)
+aids$normal_quad_resid <- residuals(model_normal_quad, type = "deviance") 
+aids$normal_quad_fitted <- fitted(model_normal_quad)
+```
+
+```{r, fig.width=8, fig.height=3.5, fig.align='center', echo=FALSE, message=FALSE, warning=FALSE}
+plot_poisson_quad <- ggplot(aids, aes(x = poisson_quad_fitted, y = poisson_quad_resid)) +
+  geom_point(alpha = 0.6) +  # Scatter plot of residuals
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +  
+  geom_smooth(method = "loess", color = "red", se = FALSE) +  
+  labs(title = "Residuals vs Fitted Values (Quadratic Poisson Model)",
+       x = expression("Fitted Values (" ~ hat(lambda)[i] ~ ")"),
+       y = "Deviance Residuals") +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 7.5, hjust = 0.5, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10)
+  )
+
+
+plot_normal_quad <- ggplot(aids, aes(x = normal_quad_fitted, y = normal_quad_resid)) +
+  geom_point(alpha = 0.6) +  # Scatter plot
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +  
+  geom_smooth(method = "loess", color = "red", se = FALSE) +  
+  labs(title = "Residuals vs Fitted Values (Quadratic Normal Model)",
+       x = expression("Fitted Values (" ~ hat(mu)[i] ~ ")"),
+       y = "Residuals") +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 7.5, hjust = 0.5, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10)
+  )
+
+(plot_poisson_quad + plot_normal_quad) + plot_layout(guides = "collect", widths = c(1, 1.2))
+```
+As we can see from the deviance residuals of the extended models, the quadratic poisson model has a flatter LOESS curve suggesting the quadratic term is better than the linear model but still not perfect. There is some non-random curvature, meaning that some structure remains unexplained. At higher fitted values, the residuals are more dispersed.
+
+The quadratic normal model has a flatter LOESS curve from its simpler model but the model still displays heteroscedasticity (unequal spread of residuals). The residuals are spreading out as fitted values increase. This suggests that variance is increasing which violates the assumption of constant variance. 
+
+
+### Updating hypothesis statement to improve models further
+
+To consider adding higher-order polynomial terms to find the best fitting model, our hypothesis statements are updated to reflect the iterative model refinement process:
+
+### Poisson Model:
+- **Null Hypothesis (\( H_0 \))**: The relationship between time and the number of cases is adequately captured by the current polynomial degree \( k \) (e.g., quadratic). Adding higher-order terms (\( \beta_{k+1}, \beta_{k+2}, \dots \)) does not significantly improve the model.
+  \[
+  H_0: \beta_{k+1} = \beta_{k+2} = \dots = 0
+  \]
+
+- **Alternative Hypothesis (\( H_A \))**: Higher-order terms significantly improve model fit, meaning the true relationship is more complex than the current model.
+  \[
+  H_A: \exists \, \beta_{k+1} \neq 0, \beta_{k+2} \neq 0, \dots
+  \]
+
+### Normal Model:
+- **Null Hypothesis (\( H_0 \))**: The relationship between time and the log-transformed mean response is adequately captured by the current polynomial degree \( k \) (e.g., quadratic). Adding additional higher-order terms does not significantly improve model fit. 
+  \[
+  H_0: \gamma_{k+1} = \gamma_{k+2} = \dots = 0
+  \]
+  
+- **Alternative Hypothesis (\( H_A \))**: The relationship is better captured by a higher-degree polynomial model. 
+  \[
+  H_A: \exists \, \gamma_{k+1} \neq 0, \gamma_{k+2} \neq 0, \dots
+  \]
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# Fitting cubic models
+model_poisson_cubic <- glm(cases ~ numeric_date + I(numeric_date^2) + I(numeric_date^3), 
+                           data = aids, family = poisson(link = "log"))
+
+model_normal_cubic <- glm(cases ~ numeric_date + I(numeric_date^2) + I(numeric_date^3), 
+                          data = aids, family = gaussian(link = "log"))
+
+# Fitting the quartic models
+model_poisson_quartic <- glm(cases ~ numeric_date + I(numeric_date^2) + I(numeric_date^3)
+                             + I(numeric_date^4), 
+                             data = aids, family = poisson(link = "log"))
+
+model_normal_quartic <- glm(cases ~ numeric_date + I(numeric_date^2) + I(numeric_date^3) 
+                            + I(numeric_date^4), 
+                            data = aids, family = gaussian(link = "log"))
+
+```
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# Perform Likelihood Ratio Tests
+poisson_lrt_cubic <- lrtest(model_poisson_quad, model_poisson_cubic)
+poisson_lrt_quartic <- lrtest(model_poisson_cubic, model_poisson_quartic)
+
+# Extract p-values
+p_cubic <- poisson_lrt_cubic$`Pr(>Chisq)`[2]  # Extract p-value for cubic test
+p_quartic <- poisson_lrt_quartic$`Pr(>Chisq)`[2]  # Extract p-value for quartic test
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Create a summary table
+lrt_summary <- data.frame(
+  Model_Comparison = c("Quadratic vs. Cubic", "Cubic vs. Quartic"),
+  P_Value = c(p_cubic, p_quartic)
+)
+
+# Display table in a neat format
+library(knitr)
+kable(lrt_summary, caption = "Likelihood Ratio Test Results for Poisson Model")
+```
+Having fitted the cubic and quartic model extensions to the poisson model. We once again undergo the likelihood ratio test. The p value for cubic test is 2.2e-16 which is too small to show on the table above. This value is much smaller than p<0.05 and therefore we reject the null hypothesis for this model and accept the alternate hypothesis: Higher-order terms significantly improve model fit, meaning the true relationship is more complex than the current model.
+
+For the quartic model however, the p-value is 0.4736 which is greater than 0.05 and therefore we accept the null hypothesis at this stage. Therefore the best fitting poisson model is the cubic model. This could be due to the fact that adding too many polynomial terms can lead to over fitting with the model capturing noise rather than the trend in the data.  
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# Perform ANOVA Tests
+normal_anova_cubic <- anova(model_normal_quad, model_normal_cubic)
+normal_anova_quartic <- anova(model_normal_cubic, model_normal_quartic)
+
+# Extract p-values
+p_cubic <- normal_anova_cubic$`Pr(>F)`[2]  # Extract p-value for cubic test
+p_quartic <- normal_anova_quartic$`Pr(>F)`[2]  # Extract p-value for quartic test
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Create a summary table
+anova_summary <- data.frame(
+  Model_Comparison = c("Quadratic vs. Cubic", "Cubic vs. Quartic"),
+  P_Value = c(p_cubic, p_quartic)
+)
+
+# Display table in a neat format
+library(knitr)
+kable(anova_summary, caption = "ANOVA Test Results for Normal Model")
+```
+After adding the cubic and quartic terms to the normal quadratic model, the anova test performed shows that the cubic model significantly improves the models fit as the p value is 0.0044 which is less than 0.05. In this case we reject the null hypothesis and accept the alternate hypothesis that: The relationship is better captured by a higher-degree polynomial model. 
+
+However, when adding the quartic term, the p value is 0.954 which suggests that this term does not improve the model fit. Therefore, the final version for the normal model is the cubic normal model and we reject the use of the quartic term.  
+
+
+**(e) Model Selection and Evaluation** 
+
+In this section, we compare the final cubic models created above to determine which provides the best fit. Originally we fit two models (model 1 and 2). The first was a poisson model and the second was a normal model, both with log link functions. These models attempted to describe the trend between the number of AIDS cases in the UK between January 1983 to March 1994. We then extended these models to include higher order powers until we arrived at a final version for both models which was the cubic poisson model and cubic normal model.   
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+
+aids$poisson_cubic_resid <- residuals(model_poisson_cubic, type = "deviance")
+aids$poisson_cubic_fitted <- fitted(model_poisson_cubic)
+
+aids$normal_cubic_resid <- residuals(model_normal_cubic, type = "deviance")  
+aids$normal_cubic_fitted <- fitted(model_normal_cubic)
+```
+
+```{r, fig.width=8, fig.height=3.5, fig.align='center', echo=FALSE, message=FALSE, warning=FALSE}
+
+plot_poisson_cubic <- ggplot(aids, aes(x = poisson_cubic_fitted, y = poisson_cubic_resid)) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +
+  labs(title = "Deviance Residuals vs Fitted Values (Cubic Poisson Model)",
+       x = expression("Fitted Values (" ~ hat(lambda)[i] ~ ")"),
+       y = "Deviance Residuals") +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 7.5, hjust = 0.5, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10)
+  )
+
+plot_normal_cubic <- ggplot(aids, aes(x = normal_cubic_fitted, y = normal_cubic_resid)) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +
+  labs(title = "Deviance Residuals vs Fitted Values (Cubic Normal Model)",
+       x = expression("Fitted Values (" ~ hat(mu)[i] ~ ")"),
+       y = "Deviance Residuals") +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 7.5, hjust = 0.5, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10)
+  )
+
+(plot_poisson_cubic + plot_normal_cubic) + plot_layout(guides = "collect", widths = c(1, 1.2))
+```
+
+The deviance residuals vs fitted values for the cubic poisson model shown above is mostly scattered randomly, suggesting the model captures the trend well. This shows improvement over the lower-order models. There is still possible overdispersion with the variance of residuals being relatively large in areas. 
+
+The deviance residuals vs fitted values for the cubic normal model shown displays mostly random residuals around zero with the red LOESS curve remaining much closer to zero compared to the lower-order normal models. The spread of residuals still increases as fitted values increase, suggesting that the issue of heteroscedasticity still remains. 
+
+### Comparing AIC's
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+model_comparison <- data.frame(
+  Model = c("Poisson Quadratic", "Poisson Cubic", "Normal Quadratic", "Normal Cubic"),
+  Deviance = c(deviance(model_poisson_quad), deviance(model_poisson_cubic),
+               deviance(model_normal_quad), deviance(model_normal_cubic)),
+  AIC = c(AIC(model_poisson_quad), AIC(model_poisson_cubic),
+          AIC(model_normal_quad), AIC(model_normal_cubic))
+)
+
+
+kable(model_comparison, caption = "Comparison of Deviance and AIC for Quadratic and Cubic Models")
+
+```
+
+To understand which model is the best out the cubic models, we can compare the AIC values in the table provided above. The AIC and deviance values of both poisson models again confirm that the cubic model is favorable (470.6322 vs 552.1500), showing that the cubic model fits the data better and improves the fit without excessive complexity. The AIC value for the cubic normal is also lower with a value of 440.88 which is lower than the normal quadratic AIC value of 447.86. This shows that the cubic model has a stronger fit and is preferred.
+
+Going on AIC alone, the best model out of the two would be the normal cubic model with a value of 440.88, suggesting this model balances fit and complexity better. However, AIC does not check model validity and we know from the deviance residual graphs shown above that the normal cubic model violates homoscedasticity. The deviance value for the normal cubic model is also extremely high with a value of 37947.70, indicating a worse fit than the poisson cubic model which has a deviance score of 166.78. This suggests the poisson cubic model has a better fit to observed counts.  
+
+```{r, fig.width=5, fig.height=3.2, fig.align='center', echo=FALSE, warning=FALSE, message=FALSE}
+# Create the Scale-Location Plot using ggplot2
+ggplot(aids, aes(x = normal_fitted, y = sqrt(abs(normal_cubic_resid)))) +
+  geom_point(size = 1.5, alpha = 0.6) +  # Data points
+  geom_smooth(method = "loess", color = "red", se = FALSE) +  # Red trend curve
+  labs(title = "Scale-Location Plot (Deviance Residuals, Normal Cubic Model)",
+       x = "Fitted Values",
+       y = expression(sqrt("|Deviance Residuals|"))) +
+  theme_classic(base_size = 12) +  
+  theme(
+    plot.title = element_text(size = 10, hjust = 0.5, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10)
+  )
+```
+
+Heteroscedasticity for the normal cubic model can be checked using this scale-location plot shown above. The red trend line displays an increasing pattern, confirming that heteroscedasticity is present. The higher fitted values have a greater residual spread and therefore the variance of the residuals is not constant. This therefore violates the normality assumption of the GLM, meaning the standard errors and confidence intervals can be deemed unreliable. 
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+dispersiontest(model_poisson_cubic)
+```
+
+Overdispersion of the cubic poisson model can be checked using the dispersion test shown above. The p-value for the model is 0.0007 which is p<0.05. Therefore, the model is overdispersed and not valid.   
+
+Having considered both models, while they both attempt to explain the trend in the number of AIDS cases, they both fail on validity aspects when model testing. While neither model is fully valid, the normal cubic model is preferred, due to its lower AIC and better trend representation. However, an extension of the poisson model to a negative binomial model should be considered to improve count data modelling and provide a better model fit. 
+
+
+**(f) Fitting a Negative Binomial Model**
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+model_nb_cubic <- glm.nb(cases ~ numeric_date + I(numeric_date^2) + I(numeric_date^3), data = aids)
+```
+
+```{r, fig.width=5, fig.height=3.2, fig.align='center', echo=FALSE, warning=FALSE, message=FALSE}
+
+# Generate predicted values with confidence intervals for Negative Binomial Model
+nb_pred <- predict(model_nb_cubic, type = "link", se.fit = TRUE)
+
+# Compute confidence intervals
+alpha <- 0.05  # 95% CI
+nb_upper <- exp(nb_pred$fit + qnorm(1 - alpha/2) * nb_pred$se.fit)  # Upper bound
+nb_lower <- exp(nb_pred$fit - qnorm(1 - alpha/2) * nb_pred$se.fit)  # Lower bound
+nb_fit <- exp(nb_pred$fit)  # Fitted values (back-transformed from log-link)
+
+# Store in data frame
+aids$nb_fit <- nb_fit
+aids$nb_lower <- nb_lower
+aids$nb_upper <- nb_upper
+
+plot_nb_fit <- ggplot(aids, aes(x = date, y = cases)) +
+  geom_point(size = 1.5, alpha = 0.6) +  # Original data points
+  geom_line(aes(y = nb_fit), color = "blue", size = 1.2) +  # Negative Binomial fit
+  geom_ribbon(aes(ymin = nb_lower, ymax = nb_upper), alpha = 0.2, fill = "blue") +  # Confidence interval
+  labs(title = "Negative Binomial Model Fit with 95% Confidence Interval",
+       x = "Time (Year)",
+       y = "Number of Cases") +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 10, hjust = 0.5, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10)
+  )
+
+# Display plot
+plot_nb_fit
+```
+The Negative Binomial model effectively captures the non-linear increase in cases over time. The model accounts for overdispersion, allowing for variance greater than the mean. This makes the model more flexible than the previous poisson model. The data points mostly fall within the confidence interval, showing that the model predicts the observed cases well and is not overfitting.  
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+aids$nb_cubic_resid <- residuals(model_nb_cubic, type = "deviance")
+aids$nb_cubic_fitted <- fitted(model_nb_cubic)
+```
+
+```{r, fig.width=5, fig.height=3.2, fig.align='center', echo=FALSE, warning=FALSE, message=FALSE}
+
+plot_nb_cubic <- ggplot(aids, aes(x = nb_cubic_fitted, y = nb_cubic_resid)) +
+  geom_point(size = 1.5, alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +
+  labs(title = "Deviance Residuals vs Fitted Values (Negative Binomial Model)",
+       x = expression("Fitted Values (" ~ hat(lambda)[i] ~ ")"),
+       y = "Deviance Residuals") +
+    theme_classic(base_size = 12) +  
+  theme(
+    plot.title = element_text(size = 10, hjust = 0.5, face = "bold"),  
+    axis.title = element_text(size = 12),  
+    axis.text = element_text(size = 10)
+  )
+plot_nb_cubic
+```
+The deviance residuals vs fitted values plot for the negative binomial model is shows random scatter around zero, demonstrating a good model fit. There is no clear pattern, suggesting the negative binomial model captures the trend well. The red LOESS line stays close to zero across all the fitted values. There is no curved pattern or systematic trend shown. There is also a consistent spread of residuals which indicates homoscedasticity (constant variance), this also reinforces that the model is a good fit. 
+
+### Comparing AIC's
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+
+model_comparison <- data.frame(
+  Model = c("Poisson Cubic", "Normal Cubic", "Negative Binomial Cubic"),
+  Deviance = c(deviance(model_poisson_cubic), deviance(model_normal_cubic), deviance(model_nb_cubic)),
+  AIC = c(AIC(model_poisson_cubic), AIC(model_normal_cubic), AIC(model_nb_cubic))
+)
+
+kable(model_comparison, caption = "Comparison of Deviance and AIC Across Models")
+```
+
+Finally, comparing the AIC and deviance scores of the negative binomial model compared to the two extended poisson cubic and normal cubic models, the negative binomial model is preferred. The negative binomial model has both lower deviance and AIC scores. The lower deviance score of 45.03 suggests this model best fits the data. The lower AIC score of 405.97 indicates that this model best balances fit and complexity of the data compared to the other models. The negative binomial model is the best model overall because it meets all GLM assumptions, ensuring a reliable inference while handling overdispersion and providing the best fit for the data with the lowest AIC.   
+
+
+
+
+
+
+
+
+
+
+

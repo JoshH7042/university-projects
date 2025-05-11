@@ -1,0 +1,55 @@
+---
+title: "MTHM506 - Statistical Data Modelling"
+author: "Joshua Harrison"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document:
+    css: style.css
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r nlmodel, include=FALSE}
+load("C:/Users/jh1376/OneDrive - University of Exeter/MSc Applied Data Science and Statistics/MTHM506 - Statistical Data Modelling/Coursework 1/datasets.RData")
+library(ggplot2)
+library(rmarkdown)
+library(tidyverse)
+library(lmerTest)
+```
+# **Question 2**
+
+The dataset `aids` contains quarterly AIDS cases (`y_i`) from January 1983 to March 1994. We analyze two competing models:
+
+1. **Poisson Model (Model 1)**:
+   \[
+   Y_i \sim Pois(\lambda_i)
+   \]
+   \[
+   \log(\lambda_i) = \beta_0 + \beta_1 x_i
+   \]
+   
+2. **Normal Model (Model 2)**:
+   \[
+   Y_i \sim N(\mu_i, \sigma^2)
+   \]
+   \[
+   \log(\mu_i) = \gamma_0 + \gamma_1 x_i
+   \]
+
+
+**(a) Plot yi against xi and comment on whether the two proposed models are sensible in terms on the distribution and the relationship of x with the mean**
+
+
+# Scatter plot of cases vs time
+ggplot(aids, aes(x = date, y = cases)) +
+  geom_point(color = "blue") +
+  labs(title = "Quarterly AIDS Cases in the UK",
+       x = "Time (Quarters since 1983)", y = "Number of Cases") +
+  theme_minimal()
+
+ednpca
+
