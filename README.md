@@ -23,17 +23,17 @@ Welcome to my portfolio of university projects. This repository contains various
 ### 4. [Exploring Spotify Data and Musical Attributes on Song Success](https://github.com/JoshH7042/university-projects/blob/main/Exploring%20Spotify%20Data%20and%20Musical%20Attributes%20on%20Song%20Success/FINAL%20PROJECT%20PDF.pdf)
 *This project explores the relationship between musical attributes and song popularity on Spotify using statistical analysis and hierarchical modeling in R. Through data wrangling, interactive visualisations, and predictive modeling, it identifies key factors influencing stream counts across top-performing tracks* 
 
-**Tools:** Python, Pandas, Machine Learning, Data Visualization
+**Tools:** R studio, Linear modelling, Machine Learning, Data Visualization
 
 ### 5. [Statistical Modelling of TB Risk Across Brazil](https://github.com/JoshH7042/university-projects/blob/main/Statistical%20Modelling%20of%20TB%20Risk%20Across%20Brazil/Statistical_Modelling_Project.pdf)
 *This project involved modelling tuberculosis (TB) incidence across Brazil's 557 microregions using Generalised Additive Models (GAMs) in R. I conducted extensive exploratory data analysis (EDA), handled spatial and temporal data, implemented and compared Poisson and Negative Binomial GAMs to address overdispersion, and visualised non-linear effects of socio-economic predictors on TB risk. Skills demonstrated include spatial data analysis, statistical modelling, model diagnostics, geospatial visualisation, and interpretation of complex model outputs to guide public health resource allocation.*  
 
 **Tools:** R, Spatial Statistics, Generalized Linear Models (GLM), TB Data
 
-### 6. [Exploring Plankton Health Status in the Arctic](./Exploring-Plankton-Health-Status-in-the-Arctic)
-*Description coming soon*  
+### 6. [Exploring Plankton Health Status in the Arctic](https://github.com/JoshH7042/university-projects/blob/main/Exploring%20Plankton%20Health%20Status%20in%20the%20Arctic/Final%20Repot%20-%20PDF.pdf)
+*This project investigates the relationship between sea surface temperature and phytoplankton biomass in the Arctic using cross-correlation, VAR, SARIMA, and spectral analysis in R. The findings highlight the complex, non-linear drivers behind phytoplankton productivity and inform climate-related ecological policy recommendations.*  
 
-**Tools:** Python, Remote Sensing, Satellite Data, Environmental Analysis
+**Tools:** R, Remote Sensing, Satellite Data, Environmental Analysis
 
 ---
 
