@@ -5,7 +5,7 @@ Welcome to my portfolio of university projects. This repository contains various
 ## Projects
 
 ### 1. [Advanced Topics In Statistics Inference and Classification](./Advanced-Topics-In-Statistics-Inference-and-Classification)
-*A detailed exploration of statistical inference and classification methods.*  
+*A detailed exploration of statistical inference and classification methods. This work covers Bayesian inferencing using JAGS and classification techniques in R. Includes a Bayesian mixture model for reaction time analysis and performance comparison of multiple classification algorithms*  
 
 **Tools:** R, Statsmodels, Classification Algorithms, Cross-validation
 
