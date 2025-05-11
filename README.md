@@ -10,12 +10,12 @@ Welcome to my portfolio of university projects. This repository contains various
 **Tools:** R, Statsmodels, Classification Algorithms, Cross-validation
 
 ### 2. [Exploring Spotify Data and Musical Attributes on Song Success](https://github.com/JoshH7042/university-projects/blob/main/Exploring%20Spotify%20Data%20and%20Musical%20Attributes%20on%20Song%20Success/FINAL%20PROJECT%20PDF.pdf)
-This project explores the relationship between musical attributes and song popularity on Spotify using statistical analysis and hierarchical modeling in R. Through data wrangling, interactive visualisations, and predictive modeling, it identifies key factors influencing stream counts across top-performing tracks 
+*This project explores the relationship between musical attributes and song popularity on Spotify using statistical analysis and hierarchical modeling in R. Through data wrangling, interactive visualisations, and predictive modeling, it identifies key factors influencing stream counts across top-performing tracks* 
 
 **Tools:** Python, Pandas, Machine Learning, Data Visualization
 
 ### 3. [Data Modelling in Space and Time](https://github.com/JoshH7042/university-projects/blob/main/Exploring%20Spotify%20Data%20and%20Musical%20Attributes%20on%20Song%20Success/FINAL%20PROJECT%20PDF.pdf)
-A statistical modelling project exploring spatial, temporal, and spatio-temporal patterns in environmental datasets using R. Includes Gaussian process modelling, time series forecasting, and Bayesian inference applied to oceanic and climatic data.  
+*A statistical modelling project exploring spatial, temporal, and spatio-temporal patterns in environmental datasets using R. Includes Gaussian process modelling, time series forecasting, and Bayesian inference applied to oceanic and climatic data.*  
 
 **Tools:** R, Geospatial Data, Temporal Modelling, Spatial Statistics
 
