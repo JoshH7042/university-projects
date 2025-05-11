@@ -10,7 +10,7 @@ Here are the major projects I've worked on:
 *Description coming soon*  
 **Tools:** R, Statsmodels, Classification Algorithms, Cross-validation
 
-### 2. [Exploring Spotify Data and Musical Attributes on Song Success](./Exploring-Spotify-Data-and-Musical-Attributes-on-Song-Success)
+### 2. [Exploring Spotify Data and Musical Attributes on Song Success](https://github.com/JoshH7042/university-projects/blob/main/Exploring%20Spotify%20Data%20and%20Musical%20Attributes%20on%20Song%20Success/FINAL%20PROJECT%20PDF.pdf)
 *Description coming soon*  
 **Tools:** Python, Pandas, Machine Learning, Data Visualization
 
