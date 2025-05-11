@@ -8,26 +8,32 @@ Here are the major projects I've worked on:
 
 ### 1. [Advanced Topics In Statistics Inference and Classification](./Advanced-Topics-In-Statistics-Inference-and-Classification)
 *A detailed exploration of statistical inference and classification methods.*  
+
 **Tools:** R, Statsmodels, Classification Algorithms, Cross-validation
 
 ### 2. [Exploring Spotify Data and Musical Attributes on Song Success](https://github.com/JoshH7042/university-projects/blob/main/Exploring%20Spotify%20Data%20and%20Musical%20Attributes%20on%20Song%20Success/FINAL%20PROJECT%20PDF.pdf)
 *Predicting song success based on musical features from Spotify data* 
+
 **Tools:** Python, Pandas, Machine Learning, Data Visualization
 
 ### 3. [Data Modelling in Space and Time](./Data-Modelling-in-Space-and-Time)
 *Description coming soon*  
+
 **Tools:** R, Geospatial Data, Temporal Modelling, Spatial Statistics
 
 ### 4. [Comparative Modelling of AIDS Trends using Gaussian and Poisson Regression](./Comparative-Modelling-of-AIDS-Trends-using-Gaussian-and-Poisson-Regression)
 *Description coming soon*  
+
 **Tools:** R, Poisson Regression, Gaussian Models, Statistical Inference
 
 ### 5. [Statistical Modelling of TB Risk Across Brazil](./Statistical-Modelling-of-TB-Risk-Across-Brazil)
 *Description coming soon*  
+
 **Tools:** R, Spatial Statistics, Generalized Linear Models (GLM), TB Data
 
 ### 6. [Exploring Plankton Health Status in the Arctic](./Exploring-Plankton-Health-Status-in-the-Arctic)
 *Description coming soon*  
+
 **Tools:** Python, Remote Sensing, Satellite Data, Environmental Analysis
 
 ---
