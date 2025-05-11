@@ -24,7 +24,7 @@ Welcome to my portfolio of university projects. This repository contains various
 
 **Tools:** R, Geospatial Data, Temporal Modelling, Spatial Statistics
 
-### 5. [Applications of Data Science - Gene Expression, Climate Trends, and Power Usage Patterns]
+### 5. [Applications of Data Science - Gene Expression, Climate Trends, and Power Usage Patterns](https://github.com/JoshH7042/university-projects/blob/main/Applications%20of%20Data%20Science%20-%20Gene%20Expression%2C%20Climate%20Trends%2C%20and%20Power%20Usage%20Patterns/Final%20Project%20-%20PDF.pdf)
 *A comprehensive data science project applying machine learning and statistical techniques across three domains: classifying cancer types using gene expression data, modeling global and regional sea level trends with linear regression, and segmenting electricity substations based on daily power demand using clustering algorithms. Includes PCA for dimensionality reduction, model evaluation with metrics and visualizations, and real-world interpretation of results.*
 
 **Tools:** R, Python, Machine Learning, Time Series Analysis, Cluster Analysis
