@@ -9,20 +9,21 @@ Welcome to my portfolio of university projects. This repository contains various
 
 **Tools:** R, Statsmodels, Classification Algorithms, Cross-validation
 
-### 2. [Exploring Spotify Data and Musical Attributes on Song Success](https://github.com/JoshH7042/university-projects/blob/main/Exploring%20Spotify%20Data%20and%20Musical%20Attributes%20on%20Song%20Success/FINAL%20PROJECT%20PDF.pdf)
-*This project explores the relationship between musical attributes and song popularity on Spotify using statistical analysis and hierarchical modeling in R. Through data wrangling, interactive visualisations, and predictive modeling, it identifies key factors influencing stream counts across top-performing tracks* 
+### 2. [Comparative Modelling of AIDS Trends using Gaussian and Poisson Regression](https://github.com/JoshH7042/university-projects/blob/main/Comparative%20Modelling%20of%20AIDS%20Trends%20using%20Gaussian%20and%20Poisson%20Regression/Statistical-Modelling_Individual-Assessment.pdf)
+*This project explores advanced regression modelling techniques to evaluate quarterly AIDS cases in the UK from 1983 to 1994. Beginning with Poisson and Normal models, it incorporates higher-order polynomial extensions, diagnostic testing, and model comparisons using deviance, AIC, and residual plots. The project concludes with the implementation of a Negative Binomial regression, which outperforms previous models by addressing overdispersion and providing the most statistically valid and interpretable fit. Methods include maximum likelihood estimation, likelihood ratio tests, and thorough residual diagnostics, all implemented and visualised in R.*  
 
-**Tools:** Python, Pandas, Machine Learning, Data Visualization
+**Tools:** R, Poisson Regression, Gaussian Models, Statistical Inference
+
 
 ### 3. [Data Modelling in Space and Time](https://github.com/JoshH7042/university-projects/blob/main/Data%20Modelling%20in%20Space%20and%20Time/Data-Science-and-Statistical-Modelling-in-Space-and-Time---Coursework.pdf)
 *A statistical modelling project exploring spatial, temporal, and spatio-temporal patterns in environmental datasets using R. Includes Gaussian process modelling, time series forecasting, and Bayesian inference applied to oceanic and climatic data.*  
 
 **Tools:** R, Geospatial Data, Temporal Modelling, Spatial Statistics
 
-### 4. [Comparative Modelling of AIDS Trends using Gaussian and Poisson Regression](./Comparative-Modelling-of-AIDS-Trends-using-Gaussian-and-Poisson-Regression)
-*Description coming soon*  
+### 4. [Exploring Spotify Data and Musical Attributes on Song Success](https://github.com/JoshH7042/university-projects/blob/main/Exploring%20Spotify%20Data%20and%20Musical%20Attributes%20on%20Song%20Success/FINAL%20PROJECT%20PDF.pdf)
+*This project explores the relationship between musical attributes and song popularity on Spotify using statistical analysis and hierarchical modeling in R. Through data wrangling, interactive visualisations, and predictive modeling, it identifies key factors influencing stream counts across top-performing tracks* 
 
-**Tools:** R, Poisson Regression, Gaussian Models, Statistical Inference
+**Tools:** Python, Pandas, Machine Learning, Data Visualization
 
 ### 5. [Statistical Modelling of TB Risk Across Brazil](./Statistical-Modelling-of-TB-Risk-Across-Brazil)
 *Description coming soon*  
