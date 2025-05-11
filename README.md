@@ -4,8 +4,6 @@ Welcome to my portfolio of university projects. This repository contains various
 
 ## Projects
 
-Here are the major projects I've worked on:
-
 ### 1. [Advanced Topics In Statistics Inference and Classification](./Advanced-Topics-In-Statistics-Inference-and-Classification)
 *A detailed exploration of statistical inference and classification methods.*  
 
